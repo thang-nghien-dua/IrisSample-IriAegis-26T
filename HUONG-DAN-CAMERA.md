@@ -120,7 +120,7 @@ Test giao diện dùng camera giả của Chrome (`--use-fake-device-for-media-s
 | --- | --- |
 | Chrome desktop 1440×1000, camera giả | Đạt 7/7 |
 | Chrome mobile 390×844, camera giả | Đạt 7/7 |
-| Webcam thật trên Windows | **Chưa kiểm thử** |
+| Webcam thật, Chrome trên Windows (16/11/2026, thủ công) | Đạt: bật camera, khung bầu dục, chụp/xác nhận, không đạt → chụp lại, lỗi → thử lại, hủy tắt camera, chuyển tab rồi quay lại, chặn quyền |
 | Safari iPhone thật | **Chưa kiểm thử** (cần thiết bị; phải mở qua HTTPS) |
 
 Khi thử trên iPhone: mở bằng địa chỉ HTTPS, cấp quyền camera, thử khóa màn hình/chuyển app rồi quay lại, ghi kết quả vào bảng trên.
