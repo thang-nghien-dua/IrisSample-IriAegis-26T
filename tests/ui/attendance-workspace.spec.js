@@ -1,4 +1,4 @@
-/* global localStorage, getComputedStyle, document */
+/* global localStorage, getComputedStyle, document, window */
 import { test, expect } from '@playwright/test'
 import { fixture, login as serverLogin } from './server-fixture.js'
 test.use({ locale: 'vi-VN' })
