@@ -52,10 +52,29 @@ test('API: đổi môn/ngày trong sheet vẫn tải đúng danh sách', async (
   await expect(change).toContainText('Phát triển ứng dụng Web')
   await expect(page.getByRole('row').filter({ hasText: 'SV001' })).toBeVisible()
   await change.click()
+  await expect(page.getByRole('table', { name: 'Danh sách điểm danh' })).toHaveCount(0)
   await page.getByLabel('Ngày điểm danh', { exact: true }).fill('2026-11-01')
   await page.getByRole('button', { name: 'Xem danh sách lớp' }).click()
   await expect(change).toContainText('01/11/2026')
   await page.screenshot({ path: info.outputPath('iphone-api-attendance.png') })
+  expect(state.violations).toEqual([])
+})
+
+test('Server: roster waits for confirmation while choosing the subject and date', async ({ page }, info) => {
+  const state = await fixture(page); await serverLogin(page)
+  const roster = page.getByRole('table', { name: 'Danh sách điểm danh' })
+  for (const width of [390, 360, 768, 1440]) {
+    await page.setViewportSize({ width, height: width === 1440 ? 900 : 844 })
+    await page.goto('/#/app/attendance?course=WEB301')
+    const change = page.getByRole('button', { name: 'Đổi buổi học' })
+    await expect(roster).toBeVisible()
+    await change.click()
+    await expect(roster).toHaveCount(0)
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
+    await page.screenshot({ path: info.outputPath(`server-attendance-session-${width}.png`) })
+    await page.getByRole('button', { name: 'Xem danh sách lớp' }).click()
+    await expect(roster).toBeVisible()
+  }
   expect(state.violations).toEqual([])
 })
 

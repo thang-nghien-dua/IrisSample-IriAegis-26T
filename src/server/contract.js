@@ -1,5 +1,5 @@
-// Default: the Web contract in openapi.yml. Opt in only for the older Python source.
-export const API_PROFILE = import.meta.env?.VITE_API_PROFILE === 'legacy-source' ? 'legacy-source' : 'openapi'
+// Follow the delivered Group 1 Python source unless YAML-only testing is requested.
+export const API_PROFILE = import.meta.env?.VITE_API_PROFILE || 'legacy-source'
 export const legacySource = API_PROFILE === 'legacy-source'
 const pick = (values, keys) => Object.fromEntries(keys.filter(key => values[key] !== undefined).map(key => [key, values[key]]))
 const nonempty = value => value !== '' && value !== undefined && value !== null

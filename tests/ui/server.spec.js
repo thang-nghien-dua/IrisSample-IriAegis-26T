@@ -10,7 +10,8 @@ test('server: login/restore, CRUD đúng payload, 204, giữ tìm kiếm khi qua
   await page.getByRole('button', { name: 'Thêm sinh viên', exact: true }).click()
   await page.screenshot({ path: info.outputPath('student-form.png'), fullPage: false })
   await page.getByLabel('Mã sinh viên', { exact: false }).fill('SV999'); await page.getByLabel('Họ tên', { exact: false }).fill('Nguyễn Minh Anh')
-  await page.getByRole('button', { name: 'Lưu sinh viên' }).click(); await expect(page.getByText('Đã lưu lên server.')).toBeVisible()
+  await page.getByRole('button', { name: 'Lưu sinh viên' }).click()
+  await expect(page.getByText('Đã tạo hồ sơ sinh viên. Vui lòng ghi danh vào môn học để sinh viên hiển thị trong danh sách giảng viên.')).toBeVisible()
   const create = state.writes.find(row => row.path === '/students'); expect(create.body.student_id).toBe('SV999'); expect(create.body).not.toHaveProperty('id'); expect(create.body).not.toHaveProperty('photo')
   await page.getByRole('searchbox').fill('Minh Anh'); await page.getByRole('button', { name: 'Tìm kiếm', exact: true }).click()
   await expect(page.getByRole('link', { name: 'Nguyễn Minh Anh', exact: true })).toHaveAttribute('href', /return=.*q%3DMinh/);

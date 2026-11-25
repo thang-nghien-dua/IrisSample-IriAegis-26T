@@ -1,6 +1,6 @@
 # Rà soát UX và bản Web kết nối server
 
-**Cập nhật sau đối chiếu đầy đủ:** xem [DOI-CHIEU-API-SERVER.md](DOI-CHIEU-API-SERVER.md). Bản mới đã thêm `/checkins` và các bộ lọc còn thiếu; mặc định gửi đúng trường YAML. Tương thích source cũ chỉ bật bằng `VITE_API_PROFILE=legacy-source`. Phần dưới lưu lại kết quả đợt rà soát UX đầu tiên; những mô tả “tạm gửi cả hai tên trường” đã được thay thế.
+**Cập nhật sau đối chiếu đầy đủ:** xem [DOI-CHIEU-API-SERVER.md](DOI-CHIEU-API-SERVER.md). Bản Web hiện mặc định gửi đúng các trường auth và sort theo source ZIP Nhóm 1; dùng `VITE_API_PROFILE=openapi` riêng khi kiểm thử YAML. Phần dưới lưu lại kết quả đợt rà soát UX đầu tiên; những mô tả “tạm gửi cả hai tên trường” đã được thay thế.
 
 Ngày rà soát: 15/11/2026. Nguồn: giao diện đang chạy, source Web, `openapi.yml` nhóm 1 và `../Project_HKDN/server/app/routes.py`. Không thay đổi source backend trong đợt này.
 
