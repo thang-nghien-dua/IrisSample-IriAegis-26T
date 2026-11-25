@@ -1,5 +1,7 @@
 # IriAegis Web — Giao diện và prototype nghiệp vụ
 
+**Thành viên mới chạy trên Windows:** [HUONG-DAN-CHAY-WINDOWS.md](HUONG-DAN-CHAY-WINDOWS.md): cài phần mềm, tải code, bấm đúp file trong `scripts/windows` để chạy web, server liveness Nhóm 4 (Docker) và link iPhone.
+
 **Nhánh phát triển chính: `HuyHoang`.** Tiếp tục phát triển và kiểm thử tại đây; đợt cập nhật này không thay đổi nhánh `main`.
 
 **Liveness nhóm 4:** [LIVENESS.md](LIVENESS.md). Đã cập nhật Android `a9be597`: chớp mắt → quay hai phía → kiểm tra khung mặt/flash vùng ngoài khung → API MiniVision. Đồng bộ ngưỡng mới do nhóm 4 cung cấp: `0,018 / 0,002 / 0,002`; API MiniVision không đổi. Thử tại `/#/camera` hoặc bước điểm danh; tăng sáng màn hình thủ công trước khi bắt đầu. Backend nhóm 4 chạy cổng 8000, proxy `/liveness-api`. Cần thử camera/iPhone thật để xác nhận chất lượng; chưa có đối sánh danh tính hoặc bằng chứng do server nhóm 1 xác minh.
