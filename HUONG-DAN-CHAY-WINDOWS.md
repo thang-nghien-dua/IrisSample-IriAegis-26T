@@ -52,7 +52,7 @@ Mở thư mục `scripts\windows` trong code vừa tải.
 3. Làm theo hướng dẫn: nhìn thẳng → chớp mắt → quay đầu hai bên → giữ yên khi màn hình nháy đỏ/xanh.
 4. Thành công: hiện **"Đã hoàn tất kiểm tra"** (server Nhóm 4 trả REAL). Bị từ chối: hiện ô lỗi đỏ.
 
-Trang `#/app` (đăng nhập, sinh viên, điểm danh) cần server **Nhóm 1** đang chạy (mặc định `http://localhost:5000`). Khi chưa có server Nhóm 1 thì chỉ thử được trang `#/camera`.
+Các màn quản lý (đăng nhập, môn học, sinh viên, điểm danh, báo cáo) ở http://127.0.0.1:5173/#/app. Đăng nhập thật cần server **Nhóm 1** đang chạy (mặc định `http://localhost:5000`). Chưa có server Nhóm 1 thì bấm **Mở dữ liệu mẫu** ở màn đăng nhập, đăng nhập `super@demo.test` / `Demo@123` để xem toàn bộ giao diện (dữ liệu chỉ lưu trên trình duyệt).
 
 ## 5. Thử trên iPhone
 
