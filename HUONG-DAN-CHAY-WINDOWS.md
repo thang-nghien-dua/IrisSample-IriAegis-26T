@@ -16,6 +16,7 @@ Repo nhóm: https://github.com/thang-nghien-dua/IrisSample-IriAegis-26T. Nhánh 
 - Nếu PowerShell hỏi `Do you agree` thì gõ `Y`. Nếu Windows hỏi quyền thì bấm **Yes**.
 - Cài xong **đóng và mở lại** PowerShell / File Explorer. Docker Desktop có thể cần khởi động lại máy.
 - Chỉ cần thử giao diện, không cần quét mặt thì có thể bỏ qua Docker.
+- **Không cần cài Python.** Server Nhóm 4 viết bằng Python nhưng chạy trong Docker, Docker đã có sẵn Python bên trong.
 
 ## 2. Tải code (làm 1 lần)
 
