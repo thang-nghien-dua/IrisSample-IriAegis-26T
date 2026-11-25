@@ -93,7 +93,7 @@ FE đang dùng cấu hình sau trong `.env.local` của project Web:
 ```dotenv
 VITE_API_BASE_URL=/api/v1
 API_PROXY_TARGET=http://localhost:5000
-VITE_API_PROFILE=openapi
+VITE_API_PROFILE=legacy-source
 ```
 
 Trình duyệt gọi `/api/v1`; Vite chuyển request tới backend. Khi Nhóm 1 cung cấp server, đổi `API_PROXY_TARGET` thành **origin backend, không thêm `/api/v1` lần nữa**, rồi khởi động lại Vite. Mô hình này dùng được khi thử Web qua tunnel trên iPhone, không để điện thoại gọi `localhost` của chính nó. Với bản deploy, cần reverse proxy tương ứng; proxy của Vite không tự tồn tại trong các file build tĩnh.

@@ -123,27 +123,27 @@ Nhóm 1 cần gộp mỗi URL thành một path, mỗi method một operation. K
 
 ### 5.2. YAML và source backend cũ
 
-| Nội dung | Theo YAML — mặc định Web | Source cũ đã đọc |
+| Nội dung | Theo source ZIP Nhóm 1 — mặc định Web | Theo YAML của Web |
 |---|---|---|
-| Đổi mật khẩu | `current_password`, `new_password` | `old_password`, `new_password`, `confirm_password` |
-| Reset mật khẩu | `email`, `reset_token`, `new_password` | `email`, `token`, `new_password`, `confirm_password` |
-| Tạo tài khoản | Cho chọn hai role; mã giảng viên tùy chọn | Bắt mã/xác nhận; luôn tạo ADMIN |
-| Sort giảm dần | Dạng `-full_name` theo mô tả Web chung | Có route đọc `full_name:desc` |
-| Các route planned | Frontend đã chuẩn bị gọi | Source cũ chưa có đủ `/checkins`, summary, email, ảnh, v.v. |
+| Đổi mật khẩu | `old_password`, `new_password`, `confirm_password` | `current_password`, `new_password` |
+| Reset mật khẩu | `email`, `token`, `new_password`, `confirm_password` | `email`, `reset_token`, `new_password` |
+| Tạo tài khoản | Bắt mã/xác nhận; luôn tạo ADMIN | Cho chọn hai role; mã giảng viên tùy chọn |
+| Sort giảm dần | Dạng `full_name:desc` | Dạng `-full_name` theo mô tả Web chung |
+| Các route planned | ZIP có `/checkins` và summary; chưa thấy 7 operation ảnh sinh viên và email | YAML mô tả các operation này nhưng trạng thái là planned |
 
-Mặc định:
-
-```dotenv
-VITE_API_PROFILE=openapi
-```
-
-Chỉ khi phải thử với source backend cũ và đã biết sự khác biệt, đổi `.env.local`, khởi động lại Vite:
+Mặc định Web hiện theo source ZIP Nhóm 1:
 
 ```dotenv
 VITE_API_PROFILE=legacy-source
 ```
 
-Chế độ này đổi tên trường auth, giới hạn tạo tài khoản ADMIN theo source cũ và chuyển cú pháp sort. **Nó không làm xuất hiện các endpoint còn thiếu**, không thay route chưa có bằng dữ liệu giả. Lớp ánh xạ nằm trong `src/server/contract.js`.
+Chỉ bật profile YAML khi cần kiểm thử hợp đồng OpenAPI của Web, bằng cách đổi `.env.local` rồi khởi động lại Vite:
+
+```dotenv
+VITE_API_PROFILE=openapi
+```
+
+Profile source đổi tên trường auth, giới hạn tạo tài khoản ADMIN và chuyển cú pháp sort theo source. **Nó không làm xuất hiện các endpoint ZIP chưa có**, không thay route thiếu bằng dữ liệu giả. Lớp ánh xạ nằm trong `src/server/contract.js`.
 
 ### 5.3. Các phần chưa có API
 
