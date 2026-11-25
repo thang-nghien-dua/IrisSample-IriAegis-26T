@@ -43,9 +43,9 @@ test('diagnostics are explicitly enabled in local dev; test bypass remains label
 test('normal mode still rejects FAKE and allows REAL only after every active challenge', async ({ page }, info) => {
   await fullCameraFixture(page, { diagnostics: false, locks: false })
   let isReal = false, requests = 0
-  await page.route('**/liveness-api/api/v1/predict-liveness', route => {
+  await page.route('**/liveness-api/api/v1/ai/anti-spoof', route => {
     requests++
-    return route.fulfill({ json: { status: 'success', result: isReal ? 'REAL' : 'FAKE', is_real: isReal, real_score: isReal ? .9 : .01, spoof_score: isReal ? .01 : .9, threshold_used: .108 } })
+    return route.fulfill({ json: { success: true, result: { is_real: isReal, real_score: isReal ? .9 : .01, spoof_score: isReal ? .01 : .9 } } })
   })
   await page.goto('/#/camera'); await startFull(page); await completeActive(page, expect)
   await expect(page.getByRole('alert')).toContainText('Ảnh chưa đạt kiểm tra người thật')
@@ -63,7 +63,7 @@ test('normal mode still rejects FAKE and allows REAL only after every active cha
 test('iPhone-sized attendance reports rejected reflection without exposing the debug panel or calling MiniVision', async ({ page }, info) => {
   await fullCameraFixture(page, { reflected: false, diagnostics: false, locks: false })
   let requests = 0
-  await page.route('**/liveness-api/api/v1/predict-liveness', route => { requests++; return route.abort() })
+  await page.route('**/liveness-api/api/v1/ai/anti-spoof', route => { requests++; return route.abort() })
   await openAttendanceCamera(page)
   await startFull(page); await completeActive(page, expect)
   const overlay = page.locator('[data-flash-phase]')
@@ -107,9 +107,9 @@ test('iPhone-sized attendance reports rejected reflection without exposing the d
 test('gateway failure after flash stays unverified, shows Vietnamese guidance and permits a fresh attempt', async ({ page }, info) => {
   await fullCameraFixture(page, { diagnostics: false })
   let recovered = false, requests = 0
-  await page.route('**/liveness-api/api/v1/predict-liveness', route => {
+  await page.route('**/liveness-api/api/v1/ai/anti-spoof', route => {
     requests++
-    return recovered ? route.fulfill({ json: { status: 'success', result: 'REAL', is_real: true, real_score: .9, spoof_score: .01, threshold_used: .108 } })
+    return recovered ? route.fulfill({ json: { success: true, result: { is_real: true, real_score: .9, spoof_score: .01 } } })
       : route.fulfill({ status: 520, json: { detail: 'The origin web server returned an invalid or incomplete response to Cloudflare.' } })
   })
   await openAttendanceCamera(page); await startFull(page); await completeActive(page, expect)

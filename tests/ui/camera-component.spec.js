@@ -78,14 +78,14 @@ test('từ chối quyền camera hiện lỗi và nút thử lại', async ({ pa
 
 test('provider Nhóm 4: gửi ảnh multipart, hiện điểm và không gắn nhãn giả lập', async ({ page }) => {
   const bodies = []
-  await page.route('**/liveness-api/api/v1/predict-liveness', route => { bodies.push(route.request().postDataBuffer()?.toString('latin1')); return route.fulfill({ json: { status: 'success', result: 'REAL', is_real: true, real_score: 0.83, spoof_score: 0.12, threshold_used: 0.108 } }) })
+  await page.route('**/liveness-api/api/v1/ai/anti-spoof', route => { bodies.push(route.request().postDataBuffer()?.toString('latin1')); return route.fulfill({ json: { success: true, result: { is_real: true, real_score: 0.83, spoof_score: 0.12 } } }) })
   const camera = await page$(page)
   await scenario(page, 'Dịch vụ Nhóm 4 thật (gửi ảnh)')
   await expect(camera.getByText('GIẢ LẬP', { exact: true })).toHaveCount(0)
   await camera.getByRole('button', { name: 'Bật camera' }).click()
   await camera.getByRole('button', { name: 'Chụp ảnh' }).click()
   await expect(camera.getByRole('status')).toHaveText('Đạt liveness')
-  expect(bodies).toHaveLength(1); expect(bodies[0]).toContain('name="file"; filename="face.jpg"')
+  expect(bodies).toHaveLength(1); expect(bodies[0]).toContain('name="image"; filename="face.jpg"')
   await camera.getByRole('button', { name: 'Sử dụng ảnh này' }).click()
   await expect(page.getByText(/liveness pass$/)).toBeVisible()
 })

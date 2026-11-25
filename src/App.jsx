@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom'
 import { Camera, CameraOff, Check, RefreshCcw, X } from './ui/icons'
 import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision'
 import { getCoverCrop } from './camera-crop.js'
-import { predictLiveness } from './liveness/client.js'
+import { antiSpoof } from './liveness/client.js'
 import { getLivenessCrop } from './liveness/face-crop.js'
 import { detectVisibleFaces } from './face-detection.js'
 import androidLogo from './assets/android/ic_app_logo.png'
@@ -169,7 +169,7 @@ function PhotoCamera({ embedded = false, onCapture, livenessRequired = false }) 
     checkRef.current = controller
     setLiveness({ state: 'checking' })
     try {
-      const result = await predictLiveness(blob, { signal: controller.signal })
+      const result = await antiSpoof(blob, { x: 0, y: 0, w: 1, h: 1 }, { signal: controller.signal })
       if (session !== sessionRef.current || checkRef.current !== controller || controller.signal.aborted) return
       setLiveness({ state: result.is_real ? 'real' : 'fake', result })
     } catch (failure) {

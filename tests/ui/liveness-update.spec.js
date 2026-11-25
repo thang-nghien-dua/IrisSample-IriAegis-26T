@@ -2,11 +2,11 @@
 import { test, expect } from '@playwright/test'
 import { fullCameraFixture, startFull, completeActive } from './liveness-fixture.js'
 
-const real = { status: 'success', result: 'REAL', is_real: true, real_score: .9, spoof_score: .01, threshold_used: .108 }
+const real = { success: true, result: { is_real: true, real_score: .9, spoof_score: .01 } }
 
 test('group 4 update: a face too small for the guide cannot start challenges or send an image', async ({ page }) => {
   await fullCameraFixture(page, { diagnostics: false }); let requests = 0
-  await page.route('**/liveness-api/api/v1/predict-liveness', route => { requests++; return route.fulfill({ json: real }) })
+  await page.route('**/liveness-api/api/v1/ai/anti-spoof', route => { requests++; return route.fulfill({ json: real }) })
   await page.goto('/#/camera')
   await page.evaluate(() => { window.facePose = { faceScale: .15 } })
   await startFull(page)
@@ -21,7 +21,7 @@ test('group 4 update: a face too small for the guide cannot start challenges or 
 
 test('group 4 update: perimeter stimulus has a transparent face opening and same geometry as its position gate', async ({ page }, info) => {
   await fullCameraFixture(page, { diagnostics: false })
-  await page.route('**/liveness-api/api/v1/predict-liveness', route => route.fulfill({ json: real }))
+  await page.route('**/liveness-api/api/v1/ai/anti-spoof', route => route.fulfill({ json: real }))
   await page.goto('/#/camera'); await startFull(page); await completeActive(page, expect)
   const overlay = page.locator('.liveness-contour[data-flash-phase]')
   await expect(overlay).toBeVisible()

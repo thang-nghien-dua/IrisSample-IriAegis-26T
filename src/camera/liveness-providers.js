@@ -1,4 +1,4 @@
-import { predictLiveness } from '../liveness/client.js'
+import { antiSpoof } from '../liveness/client.js'
 
 /**
  * Điểm tích hợp liveness cho FaceCamera.
@@ -63,24 +63,24 @@ export async function runLivenessCheck(provider, input) {
 }
 
 /**
- * Dịch vụ liveness Nhóm 4 qua HTTP (POST /api/v1/predict-liveness).
- * Gửi ảnh đã chụp; kết quả REAL/FAKE do server quyết định.
- * Lưu ý: luồng đầy đủ (chớp mắt, quay đầu, flash) vẫn là FullLivenessCamera.
+ * Dịch vụ liveness Nhóm 4 v1.2 qua HTTP (POST /api/v1/ai/anti-spoof).
+ * Gửi ảnh đã chụp (hướng gốc, không lật gương) và khung = toàn ảnh, vì ảnh
+ * FaceCamera đã căn khuôn mặt trong khung bầu dục. Kết quả do server quyết định.
+ * Luồng đầy đủ (chớp mắt, quay đầu, flash, so khớp mặt) là FullLivenessCamera.
  */
-export function createGroup4PhotoProvider({ predict = predictLiveness, baseURL } = {}) {
+export function createGroup4PhotoProvider({ check = antiSpoof, baseURL } = {}) {
   return Object.freeze({
     id: 'group4-photo',
     label: 'Dịch vụ liveness Nhóm 4 (ảnh)',
     simulated: false,
     mode: 'photo',
-    // Giữ hướng gốc như prototype trước đây gửi cho model của Nhóm 4.
     mirror: false,
     async check({ blob, signal }) {
-      const result = await predict(blob, { signal, ...(baseURL ? { baseURL } : {}) })
+      const result = await check(blob, { x: 0, y: 0, w: 1, h: 1 }, { signal, ...(baseURL ? { baseURL } : {}) })
       return {
         verdict: result.is_real ? 'pass' : 'fail',
         message: result.is_real ? '' : 'Dịch vụ Nhóm 4 đánh giá ảnh không đạt liveness. Hãy chụp lại.',
-        scores: { real: result.real_score, spoof: result.spoof_score, threshold: result.threshold_used },
+        scores: { real: result.real_score, spoof: result.spoof_score, threshold: result.threshold_used ?? '—' },
         raw: result,
       }
     },

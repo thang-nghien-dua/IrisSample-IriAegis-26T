@@ -152,16 +152,17 @@ test('provider giả lập không thể trả kết quả "thật"', () => {
   assert.equal(isProvider({ check() {} }), false)
 })
 
-test('provider Nhóm 4 gửi blob và ánh xạ REAL/FAKE từ server', async () => {
+test('provider Nhóm 4 gửi blob với khung toàn ảnh và dùng kết luận của server', async () => {
   const calls = []
-  const answer = { status: 'success', result: 'FAKE', is_real: false, real_score: 0.1, spoof_score: 0.9, threshold_used: 0.5 }
-  const provider = createGroup4PhotoProvider({ predict: async (blob, options) => { calls.push({ blob, options }); return answer } })
+  const answer = { kind: 'anti-spoof', result: 'FAKE', is_real: false, real_score: 0.1, spoof_score: 0.9, threshold_used: null }
+  const provider = createGroup4PhotoProvider({ check: async (blob, bbox, options) => { calls.push({ blob, bbox, options }); return answer } })
   const blob = new Blob(['x'], { type: 'image/jpeg' })
   const result = await runLivenessCheck(provider, { blob })
   assert.equal(calls[0].blob, blob)
+  assert.deepEqual(calls[0].bbox, { x: 0, y: 0, w: 1, h: 1 })
   assert.equal(result.state, 'failed')
   assert.equal(result.outcome.simulated, false)
-  assert.deepEqual(result.outcome.scores, { real: 0.1, spoof: 0.9, threshold: 0.5 })
+  assert.deepEqual(result.outcome.scores, { real: 0.1, spoof: 0.9, threshold: '—' })
   assert.equal(provider.mode, 'photo')
 })
 

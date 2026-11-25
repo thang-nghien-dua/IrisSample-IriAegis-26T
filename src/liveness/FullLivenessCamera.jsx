@@ -3,8 +3,7 @@ import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision'
 import { Camera, RefreshCcw } from '../ui/icons'
 import { detectionRegion } from '../face-detection.js'
 import { getCoverCrop } from '../camera-crop.js'
-import { getLivenessCrop } from './face-crop.js'
-import { predictLiveness } from './client.js'
+import { antiSpoof, normalizeBox } from './client.js'
 import { LivenessStateMachine } from './liveness-state-machine.js'
 import { EyeCalibration, LANDMARK_MODEL, readLandmarks } from './landmark-input.js'
 import { FLASH_LIMITS, FlashSampler, lockCamera, sampleFaceCore } from './flash-challenge.js'
@@ -18,7 +17,18 @@ import './full-liveness.css'
 const WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm'
 const blobFromCanvas = canvas => new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Không tạo được ảnh gửi server.')), 'image/jpeg', .92))
 
-export default function FullLivenessCamera({ embedded = false, onCapture }) {
+/**
+ * Default server step after the in-browser blink/turn/flash checks:
+ * group 4 MiniVision anti-spoof on the final unmirrored frame.
+ */
+export const antiSpoofVerifier = ({ frame, bbox }, { signal }) => antiSpoof(frame, bbox, { signal })
+
+/**
+ * verifier(input, { signal }) → { is_real, message, ... }
+ * input = { frame, bbox, width, height }: JPEG Blob of the raw (unmirrored)
+ * camera frame and the face box as 0..1 fractions of that frame.
+ */
+export default function FullLivenessCamera({ embedded = false, onCapture, verifier = antiSpoofVerifier, checkingLabel = 'Đang gửi ảnh cho dịch vụ xác thực' }) {
   const diagnostics = cameraDiagnosticsEnabled()
   const videoRef = useRef(null), runtime = useRef({ epoch: 0 })
   const [status, setStatus] = useState({ state: 'idle', message: 'Sẵn sàng xác thực' })
@@ -108,28 +118,28 @@ export default function FullLivenessCamera({ embedded = false, onCapture }) {
     rt.finishing = true
     let requestEpoch = epoch, controller
     try {
-      // Same frame provides both the displayed photo and context crop to MiniVision.
+      // Same frame provides the displayed (mirrored) photo and the raw frame sent to group 4.
       const region = getCoverCrop(video.videoWidth, video.videoHeight, video.clientWidth, video.clientHeight)
       const preview = document.createElement('canvas'); preview.width = region.width; preview.height = region.height
       const ctx = preview.getContext('2d'); ctx.translate(preview.width, 0); ctx.scale(-1, 1)
       ctx.drawImage(video, region.x, region.y, region.width, region.height, 0, 0, preview.width, preview.height)
-      const crop = getLivenessCrop(sample.faces[0].boundingBox, video.videoWidth, video.videoHeight)
-      const upload = document.createElement('canvas'); upload.width = crop.width; upload.height = crop.height
-      upload.getContext('2d').drawImage(video, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height)
+      const upload = document.createElement('canvas'); upload.width = video.videoWidth; upload.height = video.videoHeight
+      upload.getContext('2d').drawImage(video, 0, 0)
+      const bbox = normalizeBox(sample.faces[0].boundingBox, video.videoWidth, video.videoHeight)
       const evidence = { source: 'group4-android-web-port', active: true, flash: rt.flashReport,
         cameraLock: { exposure: !!rt.lockReport?.exposure, whiteBalance: !!rt.lockReport?.whiteBalance }, serverBound: false }
       const image = preview.toDataURL('image/jpeg', .92)
-      const blob = await blobFromCanvas(upload)
+      const frame = await blobFromCanvas(upload)
       if (epoch !== rt.epoch) return
       releaseResources()
       requestEpoch = rt.epoch
       controller = new AbortController(); rt.controller = controller
-      setPhoto(image); setStatus({ state: 'checking', message: '4/4 · MiniVision đang kiểm tra ảnh' })
-      const verdict = await predictLiveness(blob, { signal: controller.signal })
+      setPhoto(image); setStatus({ state: 'checking', message: checkingLabel })
+      const verdict = await verifier({ frame, bbox, width: video.videoWidth, height: video.videoHeight }, { signal: controller.signal })
       if (requestEpoch !== rt.epoch || controller.signal.aborted) return
       rt.controller = null
       setResult({ ...verdict, web_liveness: evidence })
-      setStatus({ state: verdict.is_real ? 'real' : 'fake', message: verdict.is_real ? 'Đã hoàn thành kiểm tra liveness' : 'MiniVision không chấp nhận ảnh này' })
+      setStatus({ state: verdict.is_real ? 'real' : 'fake', message: verdict.is_real ? 'Đã hoàn thành kiểm tra liveness' : 'Dịch vụ xác thực không chấp nhận ảnh này' })
     } catch (failure) {
       if (requestEpoch !== runtime.current.epoch || controller?.signal.aborted) return
       fail(failure.message)
@@ -337,7 +347,7 @@ export default function FullLivenessCamera({ embedded = false, onCapture }) {
         </div>
         {error && <p className="error" role="alert">{errorMessage}</p>}
         {status.state === 'failed' && flashReport && <button type="button" className="camera-support-link" onClick={downloadFlashSupport}>Lưu thông tin lỗi</button>}
-        {status.state === 'fake' && <p className="error" role="alert">Ảnh chưa đạt kiểm tra người thật. Hãy dùng khuôn mặt trực tiếp và thử lại.</p>}
+        {status.state === 'fake' && <p className="error" role="alert">{result?.message || 'Ảnh chưa đạt kiểm tra người thật. Hãy dùng khuôn mặt trực tiếp và thử lại.'}</p>}
         {photo && onCapture && <button type="button" className="btn primary" disabled={status.state !== 'real'} onClick={() => { if (status.state === 'real' && result?.is_real) onCapture(photo, result) }}>Sử dụng ảnh này</button>}
         {diagnostics && <details className="liveness-details" open={showDetails} onToggle={event => setShowDetails(event.currentTarget.open)}><summary>Thông tin kiểm tra</summary>
           <p>Luồng liveness trên Web; chưa đối sánh danh tính hoặc ràng buộc xác thực vào API điểm danh.</p>
@@ -348,7 +358,7 @@ export default function FullLivenessCamera({ embedded = false, onCapture }) {
           {metrics?.cameraState && <p>Camera: {metrics.cameraState}</p>}
           {flashReport && <p>Flash: shift {flashReport.shift?.toFixed(3) ?? '—'} / {FLASH_LIMITS.shift.toFixed(3)} · normR {flashReport.normRed?.toFixed(3) ?? '—'} / {FLASH_LIMITS.normRed.toFixed(3)} · normB {flashReport.normBlue?.toFixed(3) ?? '—'} / {FLASH_LIMITS.normBlue.toFixed(3)} · Mẫu nền/đỏ/xanh: {flashReport.counts.baseline}/{flashReport.counts.red}/{flashReport.counts.blue}</p>}
           {flashReport && <button type="button" className="btn secondary" onClick={downloadMeasurement}>Tải số đo ánh sáng (.json)</button>}
-          {result && <p>MiniVision: {result.result} · REAL {result.real_score} · Ngưỡng {result.threshold_used} · Flash shift {result.web_liveness.flash.shift.toFixed(3)}</p>}
+          {result && <p>Dịch vụ: {result.kind || '—'} · REAL {result.real_score ?? '—'}{result.match_similarity != null ? ` · Giống ${result.match_similarity}` : ''} · Flash shift {result.web_liveness?.flash?.shift?.toFixed(3) ?? '—'}</p>}
         </details>}
         {diagnostics && !embedded && <a className="passive-test-link" href="#/camera/passive">Thử riêng API phân loại ảnh</a>}
       </section>

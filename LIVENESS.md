@@ -92,18 +92,24 @@ Android gốc cũng chỉ khóa AE/AWB khi phần cứng báo hỗ trợ. Web l�
 
 Hai pha đỏ/xanh là kích thích đo, không phải hiệu ứng trang trí. Người dùng đồng ý trước khi bắt đầu; có nút Dừng kiểm tra ánh sáng trên lớp phủ và có thể hủy bằng Escape. Rời tab, pause, track mute/ended, đóng màn hình hoặc bắt đầu lại hủy phiên, tắt flash và không nhận kết quả cũ.
 
-## 4. API MiniVision giữ nguyên
+## 4. API MiniVision nhóm 4 (bản 1.2)
+
+Từ 25/11/2026, Web dùng API mới của nhóm 4: repo `Long965/IrisSample-IriAegis-26T`, nhánh `task1.2_API_Liveness_detection`, commit `bfdc35a`, thư mục `liveness_backend`. Endpoint cũ `/api/v1/predict-liveness` không còn (404).
+
+Đã thống nhất với nhóm 4 (Long) ngày 25/11: **Web chỉ hỏi REAL/FAKE**. Chớp mắt, quay đầu, flash chạy trên trình duyệt. Sinh viên, ảnh mẫu, so khớp danh tính và điểm danh thuộc phía nhóm 1, nên Web không dùng `register-face`, `verify-liveness`, `users` hay DB của nhóm 4.
 
 | Phương thức | Endpoint nhóm 4 | Dữ liệu |
 |---|---|---|
-| GET | `/` | Health/model đã nạp |
-| POST | `/api/v1/predict-liveness` | Multipart với trường `file` |
+| GET | `/health` | `status: ONLINE` và trạng thái model |
+| POST | `/api/v1/ai/anti-spoof` | Multipart: `image` (JPEG), `bbox_x`, `bbox_y`, `bbox_w`, `bbox_h` |
 
-Response gồm `status`, `result`, `is_real`, `real_score`, `spoof_score`, `threshold_used`, `message`. Web không gửi JWT nhóm 1 hoặc tự đổi threshold; giữ mặc định server 0,108. Không tự tính lại REAL từ điểm server đã làm tròn.
+- `image` là khung hình gốc của camera (không lật gương). `bbox_*` là tỉ lệ 0..1 của khuôn mặt trong khung đó. Server tự cắt 2,7 lần quanh khuôn mặt rồi chạy MiniFASNetV2.
+- Response: `{"success": true, "result": {"is_real", "real_score", "spoof_score", ...}}`. Web dùng nguyên `is_real` của server, không tự so điểm.
+- Web không gửi JWT nhóm 1.
+- Trang `#/camera/passive` gửi ảnh đã cắt sẵn nên dùng khung toàn ảnh (`0,0,1,1`).
+- `src/camera` (FaceCamera) gửi ảnh FaceCamera với khung toàn ảnh.
 
-API xử lý một ảnh, resize BGR về 80×80 rồi suy luận MiniFASNetV2; không tự detect mặt, không chạy active challenge. Web gửi crop 2,7 quanh mặt theo notebook nhóm 4, theo hướng ảnh gốc. Preview lật gương không làm đổi hướng dữ liệu gửi model.
-
-`main.py` nhóm 4 không bị sửa. Chớp mắt/quay đầu/flash chạy trong phần chuyển nền tảng Web, MiniVision chạy trên server. Đây là đường triển khai được chọn để có đủ luồng với source hiện có.
+Bản nhóm 4 ngày 25/11 cần cố định phiên bản thư viện. Nếu cài theo `requirements.txt` hiện tại thì sẽ nhận OpenCV 5 và lỗi (xem báo cáo kiểm thử gửi nhóm 4). Đã chạy được với `fastapi==0.115.6`, `opencv-python-headless==4.10.0.84`, `numpy==2.1.3`, `ai-edge-litert==2.4.0`.
 
 ### Khi camera qua flash nhưng báo lỗi kết nối
 
