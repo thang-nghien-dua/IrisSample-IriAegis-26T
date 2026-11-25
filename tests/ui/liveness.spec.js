@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
 import { fixture, login } from './server-fixture.js'
 import { fullCameraFixture, startFull, completeActive } from './liveness-fixture.js'
-const real = { status: 'success', result: 'REAL', is_real: true, real_score: .83, spoof_score: .12, threshold_used: .108 }
-const fake = { ...real, result: 'FAKE', is_real: false, real_score: .01, spoof_score: .98 }
+const real = { success: true, result: { is_real: true, real_score: .83, spoof_score: .12 } }
+const fake = { success: true, result: { is_real: false, real_score: .01, spoof_score: .98 } }
 async function attendance(page) {
   const state = await fixture(page); await login(page); await page.goto('/#/app/attendance?course=WEB301')
   await page.getByRole('button', { name: 'Điểm danh', exact: true }).first().click()
@@ -19,12 +19,12 @@ test('full: camera permission denied cannot call API or pass', async ({ page }) 
 })
 test('full: blink, turns, measured flash, group4 multipart, use image; no automatic checkin', async ({ page }, info) => {
   await fullCameraFixture(page); const requests = []
-  await page.route('**/liveness-api/api/v1/predict-liveness', async route => { requests.push({ headers: route.request().headers(), body: route.request().postDataBuffer()?.toString('latin1') }); await route.fulfill({ json: real }) })
+  await page.route('**/liveness-api/api/v1/ai/anti-spoof', async route => { requests.push({ headers: route.request().headers(), body: route.request().postDataBuffer()?.toString('latin1') }); await route.fulfill({ json: real }) })
   const state = await attendance(page); await startFull(page); await completeActive(page, expect)
   await expect(page.getByRole('status')).toContainText('Đã hoàn tất kiểm tra')
   expect(await page.evaluate(() => window.flashSeen)).toEqual(['red', 'blue'])
   await expect(page.locator('[data-flash-phase]')).toHaveCount(0)
-  expect(requests).toHaveLength(1); expect(requests[0].body).toContain('name="file"; filename="face.jpg"'); expect(requests[0].headers.authorization).toBeUndefined()
+  expect(requests).toHaveLength(1); expect(requests[0].body).toContain('name="image"; filename="face.jpg"'); expect(requests[0].headers.authorization).toBeUndefined()
   expect(await page.evaluate(() => window.testTracks.every(track => track.readyState === 'ended'))).toBe(true)
   expect(await page.evaluate(() => window.constraintWrites.some(row => row.advanced[0].exposureMode === 'continuous'))).toBe(true)
   await page.screenshot({ path: info.outputPath('full-liveness-completed.png'), fullPage: false })
@@ -93,10 +93,11 @@ test('full: stale API REAL after cancellation cannot unlock an image', async ({ 
   await expect(page.getByRole('button', { name: 'Sử dụng ảnh này', exact: true })).toHaveCount(0)
 })
 test('client: group4 HTTP contract remains identical on WebKit and Chrome', async ({ page }) => {
-  let body; await page.route('**/liveness-api/api/v1/predict-liveness', async route => { body = route.request().postDataBuffer()?.toString('latin1'); await route.fulfill({ json: real }) })
+  let body; await page.route('**/liveness-api/api/v1/ai/anti-spoof', async route => { body = route.request().postDataBuffer()?.toString('latin1'); await route.fulfill({ json: real }) })
   await page.goto('/#/camera')
-  const result = await page.evaluate(async () => { const { predictLiveness } = await import('/src/liveness/client.js'); return predictLiveness(new Blob(['fixture'], { type: 'image/jpeg' })) })
-  expect(result).toEqual(real); expect(body).toContain('name="file"; filename="face.jpg"')
+  const result = await page.evaluate(async () => { const { antiSpoof } = await import('/src/liveness/client.js'); return antiSpoof(new Blob(['fixture'], { type: 'image/jpeg' }), { x: .25, y: .2, w: .5, h: .6 }) })
+  expect(result).toMatchObject({ result: 'REAL', is_real: true, real_score: real.result.real_score })
+  expect(body).toContain('name="image"; filename="face.jpg"'); expect(body).toContain('name="bbox_w"')
 })
 
 test('full: Euler boundary does not cause a false splice; actual jump reports the failing frame', async ({ page }, info) => {

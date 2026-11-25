@@ -13,7 +13,9 @@ export async function fullCameraFixture(page, { reflected = true, locks = true, 
         if(this.calls===2){const until=performance.now()+(window.inferenceStallMs||0);while(performance.now()<until){/* Slow first live inference. */}}
         if(!this.primed){this.primed=true;const until=performance.now()+(window.warmupMs||0);while(performance.now()<until){/* Simulate cold shader compilation. */}}
         if(document.querySelector('[data-flash-phase]'))throw new Error('Do not run landmark inference on flash-colored frames');
-        const {yaw=0,pitch=0,roll=0,blink=.05,count=1,nose=.5,faceScale=1}=window.facePose||{};
+        const {yaw:poseYaw=0,pitch=0,roll=0,blink=.05,count=1,nose=.5,faceScale=1}=window.facePose||{};
+        // A real head is never perfectly still; static-frame detection rejects frozen video.
+        const yaw=poseYaw+(window.freezeVideo?0:Math.sin(performance.now()*.02)*.4);
         const points=Array.from({length:478},()=>({x:.5,y:.5,z:0}));
         const halfHeight=blink>.3 ? .003 : .012;
         for(const [a,b,c,d,e,f,x] of [[362,385,387,263,373,380,.55],[33,160,158,133,153,144,.35]]){

@@ -101,7 +101,7 @@ Provider là một object:
 Có sẵn:
 
 ```js
-createGroup4PhotoProvider()                                   // gọi /liveness-api/api/v1/predict-liveness
+createGroup4PhotoProvider()                                   // gọi /liveness-api/api/v1/ai/anti-spoof (REAL/FAKE)
 createSimulatedProvider({ scenario: 'pass' | 'fail' | 'error', delay: 900, mode: 'photo' | 'stream' })
 ```
 
@@ -127,7 +127,7 @@ Khi thử trên iPhone: mở bằng địa chỉ HTTPS, cấp quyền camera, th
 
 ## 5. Giới hạn và việc tiếp theo
 
-- `createGroup4PhotoProvider` gửi nguyên khung đã chụp, hướng gốc (không lật gương) như prototype cũ. Prototype cũ cắt sát khuôn mặt trước khi gửi cho model 2.7, nên độ chính xác có thể khác. Cần thống nhất với Nhóm 4 định dạng ảnh đầu vào.
+- `createGroup4PhotoProvider` gửi nguyên khung đã chụp, hướng gốc (không lật gương), với vùng mặt = toàn ảnh. Prototype cũ cắt sát khuôn mặt trước khi gửi cho model 2.7, nên độ chính xác có thể khác. Cần thống nhất với Nhóm 4 định dạng ảnh đầu vào.
 - Chưa chuyển `PhotoField`, `FaceFlow` và `server/*` sang FaceCamera. Việc này chờ trưởng nhóm duyệt API component rồi mới làm, để tránh sửa module của thành viên khác.
 - Cần Nhóm 4 xác nhận: module chạy trên server hay trình duyệt, đầu vào (ảnh/stream, kích thước, có lật gương không) và định dạng kết quả.
 - Gửi ảnh lên server phụ thuộc đặc tả Nhóm 1/Nhóm 3.

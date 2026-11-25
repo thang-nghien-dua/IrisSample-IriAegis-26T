@@ -57,7 +57,7 @@ Không dùng “38/38 endpoint” để kết luận “100% chức năng Androi
 
 ## 3. Liveness hiện tại
 
-`src/liveness/FullLivenessCamera.jsx` đã triển khai chớp mắt, quay đầu hai phía, chính diện, đo phản xạ đỏ/xanh rồi gọi MiniVision. `src/liveness/client.js` gửi file đến `POST /api/v1/predict-liveness` qua proxy riêng. Đây là phần nhận từ nhóm 4, được chuyển nền tảng sang Web, không phải tính năng có sẵn trong Android gốc nêu trên.
+`src/liveness/FullLivenessCamera.jsx` đã triển khai chớp mắt, quay đầu hai phía, chính diện, đo phản xạ đỏ/xanh rồi gọi MiniVision. `src/liveness/client.js` gửi khung hình gốc và vùng mặt đến `POST /api/v1/ai/anti-spoof` (API nhóm 4 bản 1.2) qua proxy riêng. Đây là phần nhận từ nhóm 4, được chuyển nền tảng sang Web, không phải tính năng có sẵn trong Android gốc nêu trên.
 
 REAL cho phép sử dụng ảnh sau khi đủ luồng; FAKE/lỗi không cho sử dụng. Chưa có hợp đồng phía nhóm 1 để chứng minh kết quả này thuộc đúng danh tính/đúng lượt điểm danh. Xem [LIVENESS.md](LIVENESS.md).
 
